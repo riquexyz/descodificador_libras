@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descodificador de LIBRAS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 20px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .decode-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .decode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .clear-btn {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .clear-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .output-section {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 10px;
+            min-height: 150px;
+            display: none;
+        }
+
+        .output-section.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .output-label {
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .text-output {
+            font-size: 20px;
+            line-height: 1.8;
+            word-wrap: break-word;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            min-height: 100px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .copy-feedback {
+            display: none;
+            text-align: center;
+            color: #4CAF50;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .alphabet-reference {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .alphabet-reference h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .letters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .letter-item {
+            text-align: center;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .letter-item:hover {
+            background: #f093fb;
+            transform: scale(1.05);
+        }
+
+        .emoji-display {
+            font-size: 36px;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .letter-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .click-hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .stat {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f5576c;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .text-output {
+                font-size: 18px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                min-width: auto;
+            }
+
+            .letters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Descodificador de LIBRAS</h1>
+        <p class="subtitle">Converta emojis de LIBRAS de volta para texto</p>
+
+        <div class="info-box">
+            💡 Cole os emojis de LIBRAS e veja a tradução para texto. Você também pode clicar nos emojis da tabela para adicioná-los ao campo de entrada!
+        </div>
+
+        <div class="input-section">
+            <label for="emojiInput">Cole os emojis de LIBRAS:</label>
+            <textarea id="emojiInput" placeholder="Cole aqui os emojis... (ex: 👋👌🤌👍🤚)"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button class="decode-btn" onclick="decodeLibras()">🔄 Descodificar</button>
+            <button class="clear-btn" onclick="clearAll()">✕ Limpar</button>
+        </div>
+
+        <div class="output-section" id="outputSection">
+            <div class="output-label">Resultado em Texto:</div>
+            <div class="text-output" id="textOutput"></div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="charCount">0</div>
+                    <div class="stat-label">Caracteres</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="wordCount">0</div>
+                    <div class="stat-label">Palavras</div>
+                </div>
+            </div>
+            <button class="copy-btn" onclick="copyToClipboard()">📋 Copiar Resultado</button>
+            <div class="copy-feedback" id="copyFeedback">✓ Copiado com sucesso!</div>
+        </div>
+
+        <div class="alphabet-reference">
+            <h3>📚 Clique nos emojis para adicionar ao campo de entrada</h3>
+            <div class="letters-grid" id="alphabetGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mapeamento de emojis de LIBRAS para letras
+        const librasMap = {
+            '👋': 'A',
+            '👌': 'B',
+            '🤌': 'C',
+            '👍': 'D',
+            '🤚': 'E',
+            '🖖': 'F',
+            '👏': 'G',
+            '🤘': 'H',
+            '☝️': 'I',
+            '☝': 'I',
+            '👎': 'J',
+            '🖐️': 'K',
+            '🖐': 'K',
+            '✋': 'L',
+            '👐': 'M',
+            '🙌': 'N',
+            '👊': 'O',
+            '👉': 'P',
+            '👆': 'Q',
+            '🤝': 'R',
+            '✌️': 'S',
+            '✌': 'S',
+            '🤞': 'T',
+            '🤟': 'Y',
+            '✨': 'Z',
+            ' ': ' '
+        };
+
+        // Mapeamento reverso (letra para emoji)
+        const reverseMap = {
+            'A': '👋',
+            'B': '👌',
+            'C': '🤌',
+            'D': '👍',
+            'E': '🤚',
+            'F': '🖖',
+            'G': '👏',
+            'H': '🤘',
+            'I': '☝️',
+            'J': '👎',
+            'K': '🖐️',
+            'L': '✋',
+            'M': '👐',
+            'N': '🙌',
+            'O': '👊',
+            'P': '👉',
+            'Q': '👆',
+            'R': '🤝',
+            'S': '✌️',
+            'T': '🤞',
+            'U': '✋',
+            'V': '✌️',
+            'W': '🖖',
+            'X': '☞',
+            'Y': '🤟',
+            'Z': '✨'
+        };
+
+        function decodeLibras() {
+            const input = document.getElementById('emojiInput').value;
+            
+            if (!input.trim()) {
+                alert('Por favor, cole alguns emojis!');
+                return;
+            }
+
+            let result = '';
+            for (let char of input) {
+                result += librasMap[char] || '';
+            }
+
+            // Remove espaços extras e formata
+            result = result.trim();
+
+            const textOutput = document.getElementById('textOutput');
+            textOutput.textContent = result;
+            
+            // Atualizar estatísticas
+            document.getElementById('charCount').textContent = result.length;
+            document.getElementById('wordCount').textContent = result.split(/\s+/).filter(w => w.length > 0).length;
+            
+            document.getElementById('outputSection').classList.add('active');
+        }
+
+        function clearAll() {
+            document.getElementById('emojiInput').value = '';
+            document.getElementById('outputSection').classList.remove('active');
+            document.getElementById('copyFeedback').style.display = 'none';
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('textOutput').textContent;
+            navigator.clipboard.writeText(output).then(() => {
+                const feedback = document.getElementById('copyFeedback');
+                feedback.style.display = 'block';
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                }, 2000);
+            });
+        }
+
+        function addEmojiToInput(emoji) {
+            const input = document.getElementById('emojiInput');
+            input.value += emoji;
+            input.focus();
+        }
+
+        // Construir grid do alfabeto
+        function buildAlphabetGrid() {
+            const grid = document.getElementById('alphabetGrid');
+            for (let i = 65; i <= 90; i++) {
+                const letter = String.fromCharCode(i);
+                const emoji = reverseMap[letter];
+                if (emoji) {
+                    const div = document.createElement('div');
+                    div.className = 'letter-item';
+                    div.onclick = () => addEmojiToInput(emoji);
+                    div.innerHTML = `
+                        <div class="emoji-display">${emoji}</div>
+                        <div class="letter-label">${letter}</div>
+                        <div class="click-hint">Clique</div>
+                    `;
+                    grid.appendChild(div);
+                }
+            }
+        }
+
+        // Permitir Enter para descodificar
+        document.getElementById('emojiInput').addEventListener('keypress', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                decodeLibras();
+            }
+        });
+
+        // Inicializar
+        buildAlphabetGrid();
+    </script>
+</body>
+</html>
